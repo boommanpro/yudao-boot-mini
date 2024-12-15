@@ -17,11 +17,13 @@ import cn.iocoder.yudao.module.infra.enums.codegen.CodegenTemplateTypeEnum;
 import cn.iocoder.yudao.module.infra.framework.codegen.config.CodegenProperties;
 import cn.iocoder.yudao.module.infra.service.codegen.inner.CodegenBuilder;
 import cn.iocoder.yudao.module.infra.service.codegen.inner.CodegenEngine;
+import cn.iocoder.yudao.module.infra.service.codegen.inner.EnhanceCodegenEngine;
 import cn.iocoder.yudao.module.infra.service.db.DatabaseTableService;
 import cn.iocoder.yudao.module.system.api.user.AdminUserApi;
 import com.baomidou.mybatisplus.generator.config.po.TableField;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,8 +59,8 @@ public class CodegenServiceImpl implements CodegenService {
 
     @Resource
     private CodegenBuilder codegenBuilder;
-    @Resource
-    private CodegenEngine codegenEngine;
+    @Autowired
+    private EnhanceCodegenEngine codegenEngine;
 
     @Resource
     private CodegenProperties codegenProperties;

@@ -22,4 +22,12 @@ public enum CodegenFrontTypeEnum {
      */
     private final Integer type;
 
+    public static CodegenFrontTypeEnum getType(Integer type) {
+        for (CodegenFrontTypeEnum value : values()) {
+            if (value.getType().equals(type)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }
