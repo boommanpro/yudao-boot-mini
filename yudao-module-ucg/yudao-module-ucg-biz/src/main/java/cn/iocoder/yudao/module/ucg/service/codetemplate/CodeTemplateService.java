@@ -5,6 +5,7 @@ import javax.validation.*;
 import cn.iocoder.yudao.module.ucg.controller.admin.codetemplate.vo.*;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.codetemplate.CodeTemplateDO;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
 
 /**
  * 存储代码模板的基本信息 Service 接口
@@ -52,4 +53,6 @@ public interface CodeTemplateService {
     PageResult<CodeTemplateDO> getCodeTemplatePage(CodeTemplatePageReqVO pageReqVO);
 
     List<CodeTemplateDO> loadCodeTemplateByFrontType(String frontType);
+
+    List<ProjectVariableDO> queryVariables();
 }

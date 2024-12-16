@@ -1,6 +1,8 @@
 package cn.iocoder.yudao.module.ucg.service.codetemplate;
 
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
+import cn.iocoder.yudao.module.ucg.dal.mysql.project.ProjectVariableMapper;
 import cn.iocoder.yudao.module.ucg.enums.ErrorCodeConstants;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
@@ -29,6 +31,9 @@ public class CodeTemplateServiceImpl implements CodeTemplateService {
 
     @Resource
     private CodeTemplateMapper codeTemplateMapper;
+
+    @Resource
+    private ProjectVariableMapper projectVariableMapper;
 
     @Override
     public Long createCodeTemplate(CodeTemplateSaveReqVO createReqVO) {
@@ -75,6 +80,11 @@ public class CodeTemplateServiceImpl implements CodeTemplateService {
     @Override
     public List<CodeTemplateDO> loadCodeTemplateByFrontType(String frontType) {
         return codeTemplateMapper.selectByFrontType(1L, frontType);
+    }
+
+    @Override
+    public List<ProjectVariableDO> queryVariables() {
+        return projectVariableMapper.selectListByProjectId(1L);
     }
 
 }

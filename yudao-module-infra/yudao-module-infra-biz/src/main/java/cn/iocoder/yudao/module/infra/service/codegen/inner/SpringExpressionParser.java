@@ -100,7 +100,7 @@ public class SpringExpressionParser  {
             //初始化上下文
             expressionParser = new SpelExpressionParser();
             //注册默认工具方法
-//            registerFunc(context,ExtraUtils.class);
+            registerFunc(context,SpringElFunction.class);
         } else {
             throw new ApplicationContextException("can't cast ConfigurableApplicationContext");
         }

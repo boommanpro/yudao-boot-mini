@@ -7,24 +7,8 @@ import cn.hutool.extra.template.TemplateConfig;
 import cn.hutool.extra.template.TemplateEngine;
 import cn.hutool.extra.template.engine.velocity.VelocityEngine;
 import cn.hutool.system.SystemUtil;
-import cn.iocoder.yudao.framework.apilog.core.annotation.ApiAccessLog;
-import cn.iocoder.yudao.framework.apilog.core.enums.OperateTypeEnum;
-import cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil;
-import cn.iocoder.yudao.framework.common.pojo.CommonResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.collection.CollectionUtils;
-import cn.iocoder.yudao.framework.common.util.date.DateUtils;
-import cn.iocoder.yudao.framework.common.util.date.LocalDateTimeUtils;
-import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
-import cn.iocoder.yudao.framework.common.util.object.ObjectUtils;
 import cn.iocoder.yudao.framework.common.util.string.StrUtils;
-import cn.iocoder.yudao.framework.excel.core.annotations.DictFormat;
-import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
-import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
-import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
-import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
-import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.module.infra.dal.dataobject.codegen.CodegenColumnDO;
 import cn.iocoder.yudao.module.infra.dal.dataobject.codegen.CodegenTableDO;
 import cn.iocoder.yudao.module.infra.enums.codegen.CodegenFrontTypeEnum;
@@ -32,6 +16,7 @@ import cn.iocoder.yudao.module.infra.enums.codegen.CodegenSceneEnum;
 import cn.iocoder.yudao.module.infra.enums.codegen.CodegenTemplateTypeEnum;
 import cn.iocoder.yudao.module.infra.framework.codegen.config.CodegenProperties;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.codetemplate.CodeTemplateDO;
+import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
 import cn.iocoder.yudao.module.ucg.service.codetemplate.CodeTemplateService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -41,6 +26,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static cn.hutool.core.map.MapUtil.getStr;
@@ -91,32 +77,7 @@ public class EnhanceCodegenEngine {
     @PostConstruct
     @VisibleForTesting
     void initGlobalBindingMap() {
-        // 全局配置
-        globalBindingMap.put("basePackage", codegenProperties.getBasePackage());
-        globalBindingMap.put("baseFrameworkPackage", codegenProperties.getBasePackage()
-                + '.' + "framework"); // 用于后续获取测试类的 package 地址
-        globalBindingMap.put("jakartaPackage", jakartaEnable ? "jakarta" : "javax");
-        // 全局 Java Bean
-        globalBindingMap.put("CommonResultClassName", CommonResult.class.getName());
-        globalBindingMap.put("PageResultClassName", PageResult.class.getName());
-        // VO 类，独有字段
-        globalBindingMap.put("PageParamClassName", PageParam.class.getName());
-        globalBindingMap.put("DictFormatClassName", DictFormat.class.getName());
-        // DO 类，独有字段
-        globalBindingMap.put("BaseDOClassName", BaseDO.class.getName());
         globalBindingMap.put("baseDOFields", CodegenBuilder.BASE_DO_FIELDS);
-        globalBindingMap.put("QueryWrapperClassName", LambdaQueryWrapperX.class.getName());
-        globalBindingMap.put("BaseMapperClassName", BaseMapperX.class.getName());
-        // Util 工具类
-        globalBindingMap.put("ServiceExceptionUtilClassName", ServiceExceptionUtil.class.getName());
-        globalBindingMap.put("DateUtilsClassName", DateUtils.class.getName());
-        globalBindingMap.put("ExcelUtilsClassName", ExcelUtils.class.getName());
-        globalBindingMap.put("LocalDateTimeUtilsClassName", LocalDateTimeUtils.class.getName());
-        globalBindingMap.put("ObjectUtilsClassName", ObjectUtils.class.getName());
-        globalBindingMap.put("DictConvertClassName", DictConvert.class.getName());
-        globalBindingMap.put("ApiAccessLogClassName", ApiAccessLog.class.getName());
-        globalBindingMap.put("OperateTypeEnumClassName", OperateTypeEnum.class.getName());
-        globalBindingMap.put("BeanUtils", BeanUtils.class.getName());
     }
 
     /**
@@ -310,6 +271,20 @@ public class EnhanceCodegenEngine {
             bindingMap.put("subClassNameVars", subClassNameVars);
             bindingMap.put("subSimpleClassName_strikeCases", subSimpleClassNameStrikeCases);
         }
+        List<ProjectVariableDO> variableList = codeTemplateService.queryVariables();
+        variableList.stream()
+                .sorted(Comparator.comparingInt(ProjectVariableDO::getExecuteOrder))
+                .forEach(new Consumer<ProjectVariableDO>() {
+                    @Override
+                    public void accept(ProjectVariableDO v) {
+                        if (v.getExpressionType().equals("SP_EL_TEMPLATE")) {
+                            bindingMap.put(v.getVariableName(), SpringExpressionParser.getInstance().getTemplateValue(v.getVariableExpression(), bindingMap));
+                        }else {
+                            bindingMap.put(v.getVariableName(), SpringExpressionParser.getInstance().getValue(v.getVariableExpression(), bindingMap));
+                        }
+                    }
+                });
+
         return bindingMap;
     }
 
@@ -324,35 +299,13 @@ public class EnhanceCodegenEngine {
 
     @SuppressWarnings("unchecked")
     private String formatFilePath(String filePath, Map<String, Object> bindingMap) {
-        filePath = StrUtil.replace(filePath, "${basePackage}",
-                getStr(bindingMap, "basePackage").replaceAll("\\.", "/"));
-        filePath = StrUtil.replace(filePath, "${classNameVar}",
-                getStr(bindingMap, "classNameVar"));
-        filePath = StrUtil.replace(filePath, "${simpleClassName}",
-                getStr(bindingMap, "simpleClassName"));
-        // sceneEnum 包含的字段
-        CodegenSceneEnum sceneEnum = (CodegenSceneEnum) bindingMap.get("sceneEnum");
-        filePath = StrUtil.replace(filePath, "${sceneEnum.prefixClass}", sceneEnum.getPrefixClass());
-        filePath = StrUtil.replace(filePath, "${sceneEnum.basePackage}", sceneEnum.getBasePackage());
-        // table 包含的字段
-        CodegenTableDO table = (CodegenTableDO) bindingMap.get("table");
-        filePath = StrUtil.replace(filePath, "${table.moduleName}", table.getModuleName());
-        filePath = StrUtil.replace(filePath, "${table.businessName}", table.getBusinessName());
-        filePath = StrUtil.replace(filePath, "${table.className}", table.getClassName());
         // 特殊：主子表专属逻辑
         Integer subIndex = (Integer) bindingMap.get("subIndex");
-        if (subIndex != null) {
-            CodegenTableDO subTable = ((List<CodegenTableDO>) bindingMap.get("subTables")).get(subIndex);
-            filePath = StrUtil.replace(filePath, "${subTable.moduleName}", subTable.getModuleName());
-            filePath = StrUtil.replace(filePath, "${subTable.businessName}", subTable.getBusinessName());
-            filePath = StrUtil.replace(filePath, "${subTable.className}", subTable.getClassName());
-            filePath = StrUtil.replace(filePath, "${subSimpleClassName}",
-                    ((List<String>) bindingMap.get("subSimpleClassNames")).get(subIndex));
-        }
+        bindingMap.put("subIndex", subIndex);
+        filePath = SpringExpressionParser.getInstance().getTemplateValue(filePath, bindingMap);
+        bindingMap.remove("subIndex");
         return filePath;
     }
-
-
 
 
     private static boolean isSubTemplate(String path) {
