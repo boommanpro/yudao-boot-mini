@@ -55,4 +55,6 @@ public interface CodeTemplateService {
     List<CodeTemplateDO> loadCodeTemplateByFrontType(String frontType);
 
     List<ProjectVariableDO> queryVariables();
+
+    void copyByProject(Long originalId, Long targetId);
 }

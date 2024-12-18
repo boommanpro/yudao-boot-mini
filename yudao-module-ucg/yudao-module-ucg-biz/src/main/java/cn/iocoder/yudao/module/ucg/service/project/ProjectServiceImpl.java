@@ -1,11 +1,15 @@
 package cn.iocoder.yudao.module.ucg.service.project;
 
+import cn.iocoder.yudao.module.ucg.service.codetemplate.CodeTemplateService;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.*;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectDO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
@@ -32,6 +36,8 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMapper projectMapper;
     @Resource
     private ProjectVariableMapper projectVariableMapper;
+    @Resource
+    private CodeTemplateService codeTemplateService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -92,6 +98,24 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ProjectVariableDO> getProjectVariableListByProjectId(Long projectId) {
         return projectVariableMapper.selectListByProjectId(projectId);
+    }
+
+    @Override
+    public Long copyProject(ProjectSaveReqVO copyReqVO) {
+        ProjectDO project = BeanUtils.toBean(copyReqVO, ProjectDO.class);
+        project.setId(null);
+        project.clearBaseContent();
+        projectMapper.insert(project);
+
+        // 插入子表
+        copyReqVO.getProjectVariables().forEach(projectVariableDO -> {
+            projectVariableDO.clearBaseContent();
+            projectVariableDO.setId(null);
+        });
+        createProjectVariableList(project.getId(), copyReqVO.getProjectVariables());
+        // 返回
+        codeTemplateService.copyByProject(copyReqVO.getId(), project.getId());
+        return project.getId();
     }
 
     private void createProjectVariableList(Long projectId, List<ProjectVariableDO> list) {

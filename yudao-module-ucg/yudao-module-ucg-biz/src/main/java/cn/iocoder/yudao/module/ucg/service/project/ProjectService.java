@@ -1,12 +1,13 @@
 package cn.iocoder.yudao.module.ucg.service.project;
 
-import java.util.*;
-import javax.validation.*;
-import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.*;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectPageReqVO;
+import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectSaveReqVO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectDO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
-import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.common.pojo.PageParam;
+
+import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 存储项目的基本信息 Service 接口
@@ -63,4 +64,5 @@ public interface ProjectService {
      */
     List<ProjectVariableDO> getProjectVariableListByProjectId(Long projectId);
 
+    Long copyProject(ProjectSaveReqVO copyReqVO);
 }

@@ -1,13 +1,11 @@
 package cn.iocoder.yudao.module.ucg.dal.mysql.project;
 
-import java.util.*;
-
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
+import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
+import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectPageReqVO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectDO;
 import org.apache.ibatis.annotations.Mapper;
-import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.*;
 
 /**
  * 存储项目的基本信息 Mapper
@@ -26,4 +24,10 @@ public interface ProjectMapper extends BaseMapperX<ProjectDO> {
                 .orderByDesc(ProjectDO::getId));
     }
 
+    default Long selectLastEnabledProjectId(){
+        return selectOne(new LambdaQueryWrapperX<ProjectDO>()
+                .eq(ProjectDO::getEnableStatus, 1)
+                .orderByDesc(ProjectDO::getId)
+                .select(ProjectDO::getId)).getId();
+    };
 }

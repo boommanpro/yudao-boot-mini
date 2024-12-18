@@ -53,4 +53,12 @@ public abstract class BaseDO implements Serializable, TransPojo {
     @TableLogic
     private Boolean deleted;
 
+    public void clearBaseContent(){
+        this.createTime = null;
+        this.updateTime = null;
+        this.creator = null;
+        this.updater = null;
+        this.deleted = false;
+    }
+
 }

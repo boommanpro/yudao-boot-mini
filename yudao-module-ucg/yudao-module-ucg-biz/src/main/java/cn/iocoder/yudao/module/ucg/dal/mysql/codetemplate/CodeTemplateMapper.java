@@ -34,4 +34,10 @@ public interface CodeTemplateMapper extends BaseMapperX<CodeTemplateDO> {
     }
 
     List<CodeTemplateDO> selectByFrontType(@Param("projectId") Long projectId, @Param("frontType") String frontType);
+
+    default List<CodeTemplateDO> selectListByProjectId(Long projectId){
+        return selectList(new LambdaQueryWrapperX<CodeTemplateDO>()
+                .eq(CodeTemplateDO::getProjectId, projectId)
+                .orderByDesc(CodeTemplateDO::getId));
+    }
 }

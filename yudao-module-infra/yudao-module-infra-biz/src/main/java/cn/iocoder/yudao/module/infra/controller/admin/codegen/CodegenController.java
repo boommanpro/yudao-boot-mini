@@ -30,6 +30,7 @@ import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -126,8 +127,11 @@ public class CodegenController {
     @GetMapping("/preview")
     @Parameter(name = "tableId", description = "表编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('infra:codegen:preview')")
-    public CommonResult<List<CodegenPreviewRespVO>> previewCodegen(@RequestParam("tableId") Long tableId) {
-        Map<String, String> codes = codegenService.generationCodes(tableId);
+    public CommonResult<List<CodegenPreviewRespVO>> previewCodegen(@RequestParam("tableIds") List<Long> tableIds) {
+        Map<String, String> codes = new HashMap<>();
+        for (Long tableId : tableIds) {
+            codes.putAll(codegenService.generationCodes(tableId));
+        }
         return success(CodegenConvert.INSTANCE.convert(codes));
     }
 
@@ -135,10 +139,14 @@ public class CodegenController {
     @GetMapping("/download")
     @Parameter(name = "tableId", description = "表编号", required = true, example = "1024")
     @PreAuthorize("@ss.hasPermission('infra:codegen:download')")
-    public void downloadCodegen(@RequestParam("tableId") Long tableId,
+    public void downloadCodegen(@RequestParam("tableIds") List<Long> tableIds,
                                 HttpServletResponse response) throws IOException {
         // 生成代码
-        Map<String, String> codes = codegenService.generationCodes(tableId);
+
+        Map<String, String> codes = new HashMap<>();
+        for (Long tableId : tableIds) {
+            codes.putAll(codegenService.generationCodes(tableId));
+        }
         // 构建 zip 包
         String[] paths = codes.keySet().toArray(new String[0]);
         ByteArrayInputStream[] ins = codes.values().stream().map(IoUtil::toUtf8Stream).toArray(ByteArrayInputStream[]::new);

@@ -54,6 +54,13 @@ public class ProjectController {
         return success(true);
     }
 
+    @PostMapping("/copy")
+    @Operation(summary = "复制存储项目的基本信息")
+    @PreAuthorize("@ss.hasPermission('ucg:project:create')")
+    public CommonResult<Long> copyProject(@Valid @RequestBody ProjectSaveReqVO copyReqVO) {
+        return success(projectService.copyProject(copyReqVO));
+    }
+
     @DeleteMapping("/delete")
     @Operation(summary = "删除存储项目的基本信息")
     @Parameter(name = "id", description = "编号", required = true)
