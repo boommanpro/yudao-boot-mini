@@ -57,4 +57,8 @@ public interface CodeTemplateService {
     List<ProjectVariableDO> queryVariables();
 
     void copyByProject(Long originalId, Long targetId);
+
+    void batchInsert(List<CodeTemplateDO> codeTemplates);
+
+    List<CodeTemplateDO> selectByProjectId(Long id);
 }

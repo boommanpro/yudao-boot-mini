@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.ucg.controller.admin.project;
 
+import cn.iocoder.yudao.framework.common.exception.enums.GlobalErrorCodeConstants;
+import cn.iocoder.yudao.framework.common.util.json.JsonUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -8,9 +10,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 
-import javax.validation.constraints.*;
 import javax.validation.*;
 import javax.servlet.http.*;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.io.IOException;
 
@@ -18,6 +21,8 @@ import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+
+import static cn.iocoder.yudao.framework.common.pojo.CommonResult.error;
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
 import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
@@ -29,6 +34,7 @@ import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.*;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectDO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectVariableDO;
 import cn.iocoder.yudao.module.ucg.service.project.ProjectService;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "管理后台 - 存储项目的基本信息")
 @RestController
@@ -110,4 +116,33 @@ public class ProjectController {
         return success(projectService.getProjectVariableListByProjectId(projectId));
     }
 
+    @PostMapping("importProject")
+    @Operation(summary = "导入项目")
+    @PreAuthorize("@ss.hasPermission('ucg:project:export')")
+    public CommonResult<Boolean> importProject(@RequestParam("file") MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            return error(GlobalErrorCodeConstants.BAD_REQUEST);
+        }
+        // 读取文件内容
+        String fileContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+        return success(projectService.importFileContent(fileContent));
+    }
+
+    @GetMapping("exportProject")
+    @Operation(summary = "导出项目")
+    @PreAuthorize("@ss.hasPermission('ucg:project:export')")
+    public void exportProject(@RequestParam Long id, HttpServletResponse response) throws IOException {
+        ProjectAllDataVO projectAllVo = projectService.getProjectAllData(id);
+        response.setContentType("application/json");
+        response.setHeader("Content-Disposition", "attachment; filename=project_" + id + ".json");
+
+        // 将 projectAllVo 序列化为 JSON 字符串
+        String jsonString = JsonUtils.toJsonString(projectAllVo);
+
+        // 将 JSON 字符串写入响应输出流
+        try (PrintWriter out = response.getWriter()) {
+            out.print(jsonString);
+            out.flush();
+        }
+    }
 }

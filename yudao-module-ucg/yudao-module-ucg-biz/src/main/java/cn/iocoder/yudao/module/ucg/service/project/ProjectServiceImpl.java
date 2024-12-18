@@ -1,5 +1,8 @@
 package cn.iocoder.yudao.module.ucg.service.project;
 
+import cn.iocoder.yudao.framework.common.util.json.JsonUtils;
+import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
+import cn.iocoder.yudao.module.ucg.dal.dataobject.codetemplate.CodeTemplateDO;
 import cn.iocoder.yudao.module.ucg.service.codetemplate.CodeTemplateService;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
@@ -116,6 +119,47 @@ public class ProjectServiceImpl implements ProjectService {
         // 返回
         codeTemplateService.copyByProject(copyReqVO.getId(), project.getId());
         return project.getId();
+    }
+
+    @Override
+    public Boolean importFileContent(String fileContent) {
+        ProjectAllDataVO projectAllDataVO = JsonUtils.parseObject(fileContent, ProjectAllDataVO.class);
+        ProjectDO project = BeanUtils.toBean(projectAllDataVO, ProjectDO.class);
+        project.setId(null);
+        project.clearBaseContent();
+        projectMapper.insert(project);
+        projectAllDataVO.getProjectVariables().forEach(e -> {
+            e.clearBaseContent();
+            e.setId(null);
+            e.setProjectId(project.getId());
+        });
+        createProjectVariableList(project.getId(), projectAllDataVO.getProjectVariables());
+        projectAllDataVO.getCodeTemplates().forEach(e -> {
+            e.clearBaseContent();
+            e.setId(null);
+        });
+        createProjectCodeTemplateList(project.getId(), projectAllDataVO.getCodeTemplates());
+        return null;
+    }
+
+    private void createProjectCodeTemplateList(Long id, List<CodeTemplateDO> codeTemplates) {
+        codeTemplates.forEach(e->e.setProjectId(id));
+        codeTemplateService.batchInsert(codeTemplates);
+    }
+
+    @Override
+    public ProjectAllDataVO getProjectAllData(Long id) {
+        ProjectDO projectDO = projectMapper.selectById(id);
+        projectDO.clearBaseContent();
+        List<ProjectVariableDO> variableDOList = projectVariableMapper.selectListByProjectId(id);
+        variableDOList.forEach(BaseDO::clearBaseContent);
+        List<CodeTemplateDO> codeTemplateDOList = codeTemplateService.selectByProjectId(id);
+        codeTemplateDOList.forEach(BaseDO::clearBaseContent);
+        ProjectAllDataVO result = new ProjectAllDataVO();
+        BeanUtils.copyProperties(projectDO, result);
+        result.setProjectVariables(variableDOList);
+        result.setCodeTemplates(codeTemplateDOList);
+        return result;
     }
 
     private void createProjectVariableList(Long projectId, List<ProjectVariableDO> list) {

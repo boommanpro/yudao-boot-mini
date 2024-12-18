@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.ucg.service.project;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectAllDataVO;
 import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectPageReqVO;
 import cn.iocoder.yudao.module.ucg.controller.admin.project.vo.ProjectSaveReqVO;
 import cn.iocoder.yudao.module.ucg.dal.dataobject.project.ProjectDO;
@@ -65,4 +66,8 @@ public interface ProjectService {
     List<ProjectVariableDO> getProjectVariableListByProjectId(Long projectId);
 
     Long copyProject(ProjectSaveReqVO copyReqVO);
+
+    Boolean importFileContent(String fileContent);
+
+    ProjectAllDataVO getProjectAllData(Long id);
 }

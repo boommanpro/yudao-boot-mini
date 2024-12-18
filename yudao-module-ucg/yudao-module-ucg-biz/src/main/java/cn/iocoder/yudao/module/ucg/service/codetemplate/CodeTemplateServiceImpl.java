@@ -103,4 +103,13 @@ public class CodeTemplateServiceImpl implements CodeTemplateService {
         codeTemplateMapper.insertBatch(allData);
     }
 
+    @Override
+    public void batchInsert(List<CodeTemplateDO> codeTemplates) {
+        codeTemplateMapper.insertBatch(codeTemplates);
+    }
+
+    @Override
+    public List<CodeTemplateDO> selectByProjectId(Long id) {
+        return codeTemplateMapper.selectListByProjectId(id);
+    }
 }
