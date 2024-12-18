@@ -2,6 +2,7 @@ package cn.iocoder.yudao.server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * 项目的启动类
@@ -31,4 +32,8 @@ public class YudaoServerApplication {
         // 如果你碰到启动的问题，请认真阅读 https://doc.iocoder.cn/quick-start/ 文章
     }
 
+    @RequestMapping(value = "/**/{path:[^\\.]*}")
+    public String forward() {
+        return "forward:/index.html";
+    }
 }
