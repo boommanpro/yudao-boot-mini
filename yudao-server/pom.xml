@@ -22,6 +22,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.github.fppt</groupId>
+            <artifactId>jedis-mock</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        <dependency>
             <groupId>cn.iocoder.boot</groupId>
             <artifactId>yudao-module-ucg-biz</artifactId>
             <version>${revision}</version>
