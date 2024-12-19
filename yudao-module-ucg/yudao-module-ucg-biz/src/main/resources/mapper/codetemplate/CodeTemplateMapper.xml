@@ -20,6 +20,6 @@
         (
         template_type = 'SERVER'
         OR (template_type = 'FRONT' AND template_type_value = #{frontType}))
-
+        and deleted = 0
     </select>
 </mapper>
