@@ -299,12 +299,7 @@ public class EnhanceCodegenEngine {
 
     @SuppressWarnings("unchecked")
     private String formatFilePath(String filePath, Map<String, Object> bindingMap) {
-        // 特殊：主子表专属逻辑
-        Integer subIndex = (Integer) bindingMap.get("subIndex");
-        bindingMap.put("subIndex", subIndex);
-        filePath = SpringExpressionParser.getInstance().getTemplateValue(filePath, bindingMap);
-        bindingMap.remove("subIndex");
-        return filePath;
+        return SpringExpressionParser.getInstance().getTemplateValue(filePath, bindingMap);
     }
 
 
